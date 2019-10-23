@@ -19,15 +19,15 @@ Masking function uses *mask.png* file, which currently has simple circle shape.
 Edit this image to change masking shape.
 
 ## To add a function
-1) Add an item in list, self.imgProcOptions.
+1) Add an item in list, self.imgProcOptions.<br>
   e.g.: 'flip'
-2) Add matching keyword and a list in dictionary, self.imgProcOptions.
+2) Add matching keyword and a list in dictionary, self.imgProcOptions.<br>
   e.g.: flip=['direction']
-3) Add matching keyword and a list in dictionary, self.ipParamDesc.
+3) Add matching keyword and a list in dictionary, self.ipParamDesc.<br>
   e.g.: flip=['direction (0-2; 0:horizontal, 1:vertical, 2:both)']
-4) Add matching keyword and a list in dictionary, self.ipParamVal.
+4) Add matching keyword and a list in dictionary, self.ipParamVal.<br>
   e.g.: flip=[0]
-5) Insert code for the function in a function called 'procImg'.
+5) Insert code for the function in a function called 'procImg'.<br>
   e.g.:
   ```
   elif pn == 'flip':
