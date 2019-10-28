@@ -201,6 +201,7 @@ class ImgProcsFrame(wx.Frame):
         self.maskFP = "mask.png" # masking image
         ##### end of setting up attributes -----  
         
+        ### make log file 
         logHeader = "Timestamp, Image file name, Processes\n"
         logHeader += "# ----------------------------------------\n"
         if not path.isfile(self.logFile): # log file doesn't exist
@@ -520,7 +521,7 @@ class ImgProcsFrame(wx.Frame):
 
         updateFrameSize(self, wSz)
 
-        self.Bind(wx.EVT_MENU, self.onClose, quit)
+        self.Bind(wx.EVT_CLOSE, self.onClose)
 
     #-------------------------------------------------------------------
 
