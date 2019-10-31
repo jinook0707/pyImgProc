@@ -165,7 +165,7 @@ def str2num(s, c=''):
     
     oNum = None 
     if c != '': # conversion method is given
-        try: oNum = eval('%s(%s)'%(flag, s)) # try the intended conversion
+        try: oNum = eval('%s(%s)'%(c, s)) # try the intended conversion
         except: pass
     else: # no conversion is specified
         try:
