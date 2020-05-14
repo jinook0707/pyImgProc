@@ -441,6 +441,34 @@ def receiveDataFromQueue(q, logFile=''):
 
 #-----------------------------------------------------------------------
 
+def add2gbs(gbs, 
+            widget, 
+            pos, 
+            span=(1,1), 
+            bw=5, 
+            flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL):
+    """ Add 'widget' to given 'gbs'.
+    
+    Args:
+        gbs (wx.GridBagSizer).
+        widget (wxPython's widget such as wx.StaticText, wx.Choice, ...).
+        pos (tuple): x and y cell indices for positioning 'widget' in 'gbs'.
+        span (tuple): width and height in terms of cells in 'gbs'.
+        bw (int): Border width.
+        flag (int): Flags for styles.
+    
+    Returns:
+        None
+    
+    Examples:
+        >>> add2gbs(self.gbs["ui"], sTxt, (0,0), (1,1))
+    """
+    if DEBUG: print("fFuncNClasses.add2gbs()")
+
+    gbs.Add(widget, pos=pos, span=span, border=bw, flag=flag)
+
+#-----------------------------------------------------------------------
+
 def show_msg(msg, size=(400,200), title="Message"):
     """ Show a message with a dialog box with PopupDialog class
     (wx.Dialog).

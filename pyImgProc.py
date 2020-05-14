@@ -56,7 +56,8 @@ from PIL import ImageFont
 from PIL import ImageDraw 
 
 from fFuncNClasses import get_time_stamp, GNU_notice, writeFile, getWXFonts
-from fFuncNClasses import setupStaticText, updateFrameSize, str2num
+from fFuncNClasses import add2gbs, setupStaticText, updateFrameSize
+from fFuncNClasses import str2num, PopupDialog
 
 DEBUG = False 
 CWD = getcwd()
@@ -106,7 +107,14 @@ class ImgProcsFrame(wx.Frame):
         self.timer = {} # timers
         self.selectedFolders = [] # list of selected folders
         self.fileList = [] # file list of images to process 
+        self.imgFormats = [".bmp", ".eps", ".gif", 
+                           ".jpg", ".pcx", ".png", 
+                           ".tiff", ".webp"] # image formats for
+          # saving after image processing
+        self.imgFormats = sorted(self.imgFormats)
+        self.imgFormats.insert(0, "Use original file extension as it is")
         self.imgProcOptions = [
+                                'greyscale',
                                 'crop',
                                 'crop_ratio',
                                 'masking',
@@ -119,6 +127,7 @@ class ImgProcsFrame(wx.Frame):
                                 'text',
                               ] # image processing options 
         self.ipParams = dict(
+                                greyscale = [],
                                 crop = ['x', 'y', 'w', 'h'],
                                 crop_ratio = ['x', 'y', 'w', 'h'],
                                 masking = ['fill-color'],
@@ -131,6 +140,7 @@ class ImgProcsFrame(wx.Frame):
                                 text = ['text', 'x', 'y', 'font-size', 'color'],
                              ) # parameters for each image processing
         self.ipParamDesc = dict(
+            greyscale = [],
             crop = [
                 'x-coordinate to start (pixel)',
                 'y-coordinate to start (pixel)',
@@ -176,6 +186,7 @@ class ImgProcsFrame(wx.Frame):
                 ],
         ) # description of parameters
         self.ipParamVal = dict(
+                                greyscale = [],
                                 crop = [0, 0, 1, 1],
                                 crop_ratio = [0.0, 0.0, 0.5, 0.5],
                                 masking = ['#000000'], 
@@ -219,14 +230,7 @@ class ImgProcsFrame(wx.Frame):
             self.panel[pk].SetBackgroundColour(pi[pk]["bgCol"]) 
             #if pk in ["ip", "op"]:
             #    self.panel[pk].Bind(wx.EVT_PAINT, self.onPaint)
-
-        def add2gbs(gbs,
-                    widget,
-                    pos,
-                    span=(1,1),
-                    bw=5,
-                    flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL):
-            gbs.Add(widget, pos=pos, span=span, flag=flag, border=bw) 
+         
         ##### beginning of setting up UI panel interface -----
         bw = 5 # border width for GridBagSizer
         nCol = 4 # number columns
@@ -445,10 +449,23 @@ class ImgProcsFrame(wx.Frame):
         add2gbs(self.gbs["ui"], btn, (row,col), (1,1))
         btn.Hide()
         row += 1; col = 0
+        sTxt = setupStaticText(self.panel["ui"], 
+                               "File-format:", 
+                               font=self.fonts[1])
+        add2gbs(self.gbs["ui"], sTxt, (row,col), (1,1))
+        col += 1 
+        cho = wx.Choice(
+                            self.panel["ui"], 
+                            -1,
+                            name="imgFormat_cho",
+                            choices=self.imgFormats,
+                       )
+        add2gbs(self.gbs["ui"], cho, (row,col), (1,nCol-1))
+        row += 1; col = 0
         btn = wx.Button(
                             self.panel["ui"],
                             -1,
-                            label="Process all files",
+                            label="Process & save all files",
                             name="run_btn",
                             size=(hlSz[0],-1),
                        )
@@ -585,7 +602,7 @@ class ImgProcsFrame(wx.Frame):
 
         elif objName == "run_btn":
             self.showHideProcParamWidgets() # hide all parameter widgets
-            self.runImgProc() 
+            self.runImgProc() # run image processing 
 
         elif objName == "clearProc_btn":
             self.showHideProcParamWidgets() # hide all parameter widgets
@@ -986,7 +1003,13 @@ class ImgProcsFrame(wx.Frame):
         """
         for pn in self.procList:
         # go through all planned processes 
-            if pn == 'crop':
+            if pn == 'greyscale':
+                rgb_weights = [0.2989, 0.5870, 0.1140]
+                gMat = np.dot(img[...,:3], rgb_weights)
+                img[:,:,0] = gMat
+                img[:,:,1] = gMat
+                img[:,:,2] = gMat
+            elif pn == 'crop':
                 x, y, w, h = self.ipParamVal[pn]
                 img = img[y:y+h,x:x+w]
             elif pn == 'crop_ratio':
@@ -1073,11 +1096,31 @@ class ImgProcsFrame(wx.Frame):
         """
         if DEBUG: print("ImgProcsFrame.runImgProc()")
 
+        msg = "This action will save all image files in the same"
+        msg += " selected folder. If filenames are same, they will be REPLACED"
+        msg += " by processed images.\n"
+        msg += "Proceed?"
+        dlg = PopupDialog(self, -1, "Warning", msg, 
+                          flagOkayBtn=True, flagCancelBtn=True)
+        if dlg.ShowModal() == wx.ID_CANCEL: return
+        
         msg = "Processed files -----\n\n" # result message 
         msg4log = "" # log message
+        
+        ### get image file extension user wants to use 
+        obj = wx.FindWindowByName("imgFormat_cho", self.panel["ui"])
+        imgExt = obj.GetString(obj.GetSelection())
+        if "original" in imgExt.lower(): imgExt = ""
+       
         for i, fp in enumerate(self.fileList):
+        # go through each file
             img = np.array(Image.open(fp)) # open image
             img = self.procImg(img) # process
+            if imgExt != "":
+            # if there's a specific image format user chose
+                ### change file extension
+                ext = "." + fp.split(".")[-1]
+                if ext != imgExt: fp = fp.replace(ext, imgExt) 
             Image.fromarray(img).save(fp) # save image
             pl = str(self.procList)
             pl = pl.strip("[]").replace(", ","/").replace("'","")

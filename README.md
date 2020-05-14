@@ -22,7 +22,7 @@ Edit this image to change masking shape.
 ## To add a function
 1) Add an item in list, self.imgProcOptions.<br>
   e.g.: 'flip'
-2) Add matching keyword and a list in dictionary, self.imgProcOptions.<br>
+2) Add matching keyword and a list in dictionary, self.ipParams.<br>
   e.g.: flip=['direction']
 3) Add matching keyword and a list in dictionary, self.ipParamDesc.<br>
   e.g.: flip=['direction (0-2; 0:horizontal, 1:vertical, 2:both)']
